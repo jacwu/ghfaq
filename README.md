@@ -41,5 +41,6 @@ https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/integ
 使用 Azure 为 GitHub 计费
 https://docs.github.com/en/billing/how-tos/set-up-payment/connect-azure-sub
 
-
+Trust Center
+https://copilot.github.trust.page/faq
 
