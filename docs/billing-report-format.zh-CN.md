@@ -1,4 +1,4 @@
-# Copilot 用量计费 CSV 表结构说明
+# Copilot 用量计费 CSV 表结构说明和 AIC 费用计算方法
 
 本文件描述上传到应用的 **Copilot usage-based billing**（按用量计费）报告的 CSV 列结构，配合示例帮助理解每一列的含义。
 
@@ -23,8 +23,8 @@
 | 13 | `total_monthly_quota` | 数字 | 该用户当月免费额度（PRU 上限）。Business 通常 `300`，Enterprise 通常 `1000`，无 quota 时为 `0`。 |
 | 14 | `organization` | 字符串 | 该用户所属组织的 slug。个人账号或未关联组织时为空。 |
 | 15 | `cost_center_name` | 字符串 / 空 | 可选的成本中心标签，用于在组织内归类账单。 |
-| 16 | `aic_quantity` | 数字 | **同一笔用量换算成 AI Credits 后的消耗量**（参考/对比口径）。 |
-| 17 | `aic_gross_amount` | 数字（美元） | AI Credits 口径下的毛额（参考/对比口径）。 |
+| 16 | `aic_quantity` | 数字 | 同一笔用量换算成 AI Credits 后的消耗量。 |
+| 17 | `aic_gross_amount` | 数字（美元） | AI Credits 口径下的毛额。 |
 
 ---
 
@@ -70,6 +70,36 @@ aic_quantity=7.92, aic_gross_amount=0.0792
 
 ---
 
+## Overview页面数据说明
+
+Overview 页面用两张卡片并排展示两种计费口径：左侧是当前 **PRU 计费**，右侧是 **AIC / usage-based billing 计费**。
+
+### PRU 计费口径
+
+| 界面值 | 含义 | 计算方法 |
+|--------|------|----------|
+| Consumed (PRUs) | PRU 口径下，所有用量的折扣前费用。 | `sum(gross_amount)` |
+| Discount (included PRUs) | 被用户自己的 included PRU 额度抵掉的金额。 | `sum(discount_amount)` |
+| Overages | included PRU 抵扣后还需要支付的超额费用。 | `sum(net_amount)`，也等于 `Consumed (PRUs) - Discount (included PRUs)` |
+| License cost | Copilot seat 月费。 | 根据 Business / Enterprise seat 数量和对应月费计算。 |
+| Total (license + overages) | 当前 PRU 计费方式下的总账单。 | `License cost + Overages` |
+
+PRU 口径的关键点：**included PRUs 按用户独立抵扣**。某个用户没用完的 PRU，不会自动转给另一个用超的用户。
+
+### AIC 计费口径
+
+| 界面值 | 含义 | 计算方法 |
+|--------|------|----------|
+| Consumed (AICs) | AIC 口径下，所有用量的折扣前费用。 | `sum(aic_gross_amount)` |
+| Discount (included AICs) | 被 included AIC pool 抵掉的金额。 | `sum(aic_gross_amount) - sum(aic_net_amount)` |
+| Additional usage | included AIC pool 用完后还需要支付的额外费用。 | `sum(aic_net_amount)`，也等于 `Consumed (AICs) - Discount (included AICs)` |
+| License cost | Copilot seat 月费。 | 和 PRU 侧相同，根据 Business / Enterprise seat 数量和对应月费计算。 |
+| Total (license + additional usage) | AIC 计费方式下的总账单。 | `License cost + Additional usage` |
+
+AIC 口径的关键点：**included AICs 是账号/组织共享池子**。所有用户一起消耗这个池子，池子用完之后，后续用量才进入 Additional usage。
+
+
+---
 ## User表 UI 列的对应关系
 
 | UI 列 | 对应 CSV 字段 | 聚合方式 |
