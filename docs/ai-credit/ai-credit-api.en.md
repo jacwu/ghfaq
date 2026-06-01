@@ -124,20 +124,21 @@ curl -X GET \
 
 ## 3. User AI Credit Usage
 
-`GET /users/{username}/settings/billing/ai_credit/usage`
+`GET /enterprises/{enterprise}/settings/billing/ai_credit/usage?year={YYYY}&month={M}&user={login}`
 
-Returns the same structure as the enterprise endpoint, aggregated at the user level. The top-level `enterprise` field is replaced by `user`.
+Returns AI Credit usage for a single user under the enterprise billing context. The response uses the same structure as the enterprise endpoint and also includes a top-level `user` field. This was verified for users whose Copilot entitlement is managed by the enterprise.
 
-> **Note:** This endpoint only returns data when the user has purchased a Copilot plan directly. If the user's Copilot entitlement is managed by an organization or enterprise, the user will not appear in the user endpoint result. Use the organization or enterprise endpoint instead.
+> **Note:** `GET /users/{username}/settings/billing/ai_credit/usage` only returns data when the user has purchased a Copilot plan directly. If the user's Copilot entitlement is managed by an organization or enterprise, use the enterprise endpoint in this section with the `user` query parameter.
 
 ### User Parameters
 
 | Parameter | Location | Type | Description |
 | --- | --- | --- | --- |
-| username | path | string | GitHub username |
+| enterprise | path | string | Enterprise slug |
 | year | query | integer | Optional. Year. Defaults to the current year. |
 | month | query | integer | Optional. Month, from 1 to 12. Defaults to the current month. |
 | day | query | integer | Optional. Day, from 1 to 31. |
+| user | query | string | GitHub login used to filter a single user. |
 | model | query | string | Optional. Filters by model. |
 | product | query | string | Optional. Filters by product. |
 
@@ -148,7 +149,7 @@ curl -X GET \
   -H "Authorization: Bearer <token>" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2026-03-10" \
-  "https://api.github.com/users/<username>/settings/billing/ai_credit/usage?year=2026&month=6"
+  "https://api.github.com/enterprises/<enterprise_slug>/settings/billing/ai_credit/usage?year=2026&month=6&user=<login>"
 ```
 
 ### User Example Response
@@ -156,7 +157,8 @@ curl -X GET \
 ```json
 {
   "timePeriod": { "year": 2026, "month": 6 },
-  "user": "<username>",
+  "enterprise": "<enterprise_slug>",
+  "user": "<login>",
   "usageItems": [
     {
       "product": "Copilot",

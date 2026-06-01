@@ -124,20 +124,21 @@ curl -X GET \
 
 ## 3. 用户级 AI Credit 用量
 
-`GET /users/{username}/settings/billing/ai_credit/usage`
+`GET /enterprises/{enterprise}/settings/billing/ai_credit/usage?year={YYYY}&month={M}&user={login}`
 
-返回与企业端点相同结构，按用户维度聚合。顶层 `enterprise` 字段替换为 `user`。
+按企业计费口径查询单个用户的 AI Credit 用量，返回与企业端点相同结构，并在顶层额外包含 `user` 字段。实测该方式适用于由企业统一管理 Copilot 授权的用户。
 
-> **注意：** 仅当用户自行购买 Copilot 计划时该端点才有数据。如果用户的 Copilot 授权由组织或企业统一管理，则不会出现在 user 端点结果中，请用组织或企业端点。
+> **注意：** `GET /users/{username}/settings/billing/ai_credit/usage` 仅当用户自行购买个人版 Copilot 计划时才有数据。如果用户的 Copilot 授权由组织或企业统一管理，请使用本节的企业级端点加 `user` query 参数。
 
 ### 用户级参数
 
 | 参数 | 位置 | 类型 | 说明 |
 | --- | --- | --- | --- |
-| username | path | string | GitHub 用户名 |
+| enterprise | path | string | 企业 slug |
 | year | query | integer | 可选，年份，默认当前年 |
 | month | query | integer | 可选，月份（1-12），默认当前月 |
 | day | query | integer | 可选，天（1-31） |
+| user | query | string | GitHub login，用于筛选单个用户 |
 | model | query | string | 可选，筛选模型 |
 | product | query | string | 可选，筛选产品 |
 
@@ -148,7 +149,7 @@ curl -X GET \
   -H "Authorization: Bearer <token>" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2026-03-10" \
-  "https://api.github.com/users/<username>/settings/billing/ai_credit/usage?year=2026&month=6"
+  "https://api.github.com/enterprises/<enterprise_slug>/settings/billing/ai_credit/usage?year=2026&month=6&user=<login>"
 ```
 
 ### 用户级示例响应
@@ -156,7 +157,8 @@ curl -X GET \
 ```json
 {
   "timePeriod": { "year": 2026, "month": 6 },
-  "user": "<username>",
+  "enterprise": "<enterprise_slug>",
+  "user": "<login>",
   "usageItems": [
     {
       "product": "Copilot",
